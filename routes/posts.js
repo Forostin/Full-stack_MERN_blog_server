@@ -1,7 +1,7 @@
 import express from 'express';
 import { upload } from '../utils/upload.js';
 import { checkAuth } from '../utils/checkAuth.js';
-import { createPost, getAll, getById, getMyPosts } from '../controllers/post.js';
+import { createPost, getAll, getById, getMyPosts, removePost} from '../controllers/post.js';
 
 const router = express.Router();
 
@@ -24,5 +24,9 @@ router.get('/:id', getById)
 
 // создание поста
 router.post('/', checkAuth, createPost);
+
+// удаление поста
+// http://localhost:3002/api/posts/:id
+router.delete('/:id', checkAuth, removePost)
 
 export default router;
