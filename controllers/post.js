@@ -5,7 +5,6 @@ import path, {dirname} from 'path';
 import { fileURLToPath } from 'url';
 
 
-
 export const getLastTags = async (req, res) => {
   try {
     const posts = await Post.find().limit(5).exec();
@@ -78,46 +77,6 @@ export const getById = async (req, res) => {
   }
 };
 
-// export const getById = async (req, res) => {
-//   try {
-//     const postId = req.params.id;
-
-//     Post.findOneAndUpdate(
-//     // Post.findByIdAndUpdate(
-//     {
-//         _id: postId,
-//       },
-//       {
-//         $inc: { viewsCount: 1 },
-//       },
-//       {
-//         returnDocument: 'after',
-//       },
-//       (err, doc) => {
-//         if (err) {
-//           console.log(err);
-//           return res.status(500).json({
-//             message: 'Не вдалося знайти статтю',
-//           });
-//         }
-
-//         if (!doc) {
-//           return res.status(404).json({
-//             message: 'Стаття не знайдена',
-//           });
-//         }
-
-//         res.json(doc);
-//       },
-//     ).populate('user');
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({
-//       message: 'Не вдалося отримати статтю',
-//     });
-//   }
-// };
-
 // Удаление статьи:
 export const remove = async (req, res) => {
   try {
@@ -186,63 +145,56 @@ export const update = async (req, res) => {
   }
 };
 
-// //////////////////////////////////////////////////////////////////////
 // Создать пост
-export const createPost = async (req, res)=>{
-    try {
-         const { title, text } = req.body
-         const user = await User.findById(req.userId)
+export const createPost = async (req, res) => {
+  try {
+    const { title, text, tags } = req.body;
 
-         if(req.files){
-//  Присваеваем имя загруженной картинке
-             let fileName = Date.now().toString() + req.files.image.name;
-//  В переменную записываем путь к папке в которой находимся
-             const __dirname = dirname(fileURLToPath(import.meta.url));
-//  Создаем ф-цию mv, которая загружает картинку в папку uploads
-             req.files.image.mv(path.join(__dirname, '..', 'uploads', fileName));
+    if (!title || !text) {
+      return res.status(400).json({ message: 'Нет данных' });
+    }
 
-             const newPostWithImage = new Post(
-                {
-                  // username: user.username,
-                  title,
-                  text,
-                  imageUrl: fileName,
-                  tags: req.body.tags || [],
-                  user: req.userId
+    let imageUrl = '';
 
-                })
-// // // Сохраняем пост в базе данных
-                await newPostWithImage.save()
-// // // Находим пользователя User и в его массив постов добавляем новый пост. В моделе User, const UserSchema есть массив постов posts.                 
-                // await User.findByIdAndUpdate(req.userId, {
-                //     $push: { posts: newPostWithImage }
-                // })
+    if (req.files?.image) {
+       //  Присваеваем имя загруженной картинке
+      const fileName = Date.now() + '_' + req.files.image.name;
+      //  В переменную записываем путь к папке в которой находимся
+      const __dirname = dirname(fileURLToPath(import.meta.url));
+      //  Создаем ф-цию mv, которая загружает картинку в папку uploads
+      await req.files.image.mv(
+        path.join(__dirname, '..', 'uploads', fileName)
+      );
 
-                return res.json(newPostWithImage)
-         }
+      imageUrl = `/uploads/${fileName}`;
+    }
 
-//  Пост без картинки
-         const newPostWithoutImage = new Post(
-            {
-              // username: user.username,
-              title,
-              text,
-              imageUrl: '',
-              tags: req.body.tags.split(',') || [],
-              user: req.userId
-            })
-            await newPostWithoutImage.save();
-            // await User.findByIdAndUpdate(req.userId, {
-            //     $push: { posts: newPostWithoutImage }
-            // })
-            return res.json(newPostWithoutImage)
-        }
+    const newPost = new Post({
+      title,
+      text,
+      imageUrl,
+      tags: tags ? tags.split(',') : [],
+      user: req.userId,
+    });
+     // Сохраняем пост в базе данных
+    await newPost.save();
 
-    catch(error){
-        console.log(error)
-        res.json({message: 'Что-то пошло не так'})
-        }
-}
+    res.json(newPost);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Что-то пошло не так' });
+  }
+};
 
-
-// ????????????????
+// Получение постов пользователя:
+export const getMyPosts = async (req, res) => {
+  try {
+    const posts = await Post.find({ user: req.userId }).sort({ createdAt: -1 });
+    res.json(posts);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: 'Не вдалося отримати статті',
+    });
+  }
+};

@@ -1,7 +1,7 @@
 import express from 'express';
 import { upload } from '../utils/upload.js';
 import { checkAuth } from '../utils/checkAuth.js';
-import { createPost, getAll, getById } from '../controllers/post.js';
+import { createPost, getAll, getById, getMyPosts } from '../controllers/post.js';
 
 const router = express.Router();
 
@@ -13,6 +13,10 @@ router.post('/upload', checkAuth, upload.single('image'), (req, res) => {
 });
 // получение постов
 router.get('/', getAll);
+
+// Получение моих постов
+// http://localhost:3002/api/posts/me
+router.get('/me', checkAuth, getMyPosts)
 
 // Получение поста
 // http://localhost:3002/api/posts/:id
