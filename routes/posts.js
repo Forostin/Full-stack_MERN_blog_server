@@ -1,7 +1,7 @@
 import express from 'express';
 import { upload } from '../utils/upload.js';
 import { checkAuth } from '../utils/checkAuth.js';
-import { createPost, getAll, getById, getMyPosts, removePost} from '../controllers/post.js';
+import { createPost, getAll, getById, getMyPosts, removePost, updatePost} from '../controllers/post.js';
 
 const router = express.Router();
 
@@ -27,6 +27,10 @@ router.post('/', checkAuth, createPost);
 
 // удаление поста
 // http://localhost:3002/api/posts/:id
-router.delete('/:id', checkAuth, removePost)
+router.delete('/:id', checkAuth, removePost);
+
+// редактирование поста
+// http://localhost:3002/api/posts/:id
+router.put('/:id', checkAuth, updatePost)
 
 export default router;

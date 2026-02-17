@@ -77,73 +77,6 @@ export const getById = async (req, res) => {
   }
 };
 
-// Удаление статьи:
-// export const remove = async (req, res) => {
-//   try {
-//     const postId = req.params.id;
-
-//     PostModel.findOneAndDelete(
-//       {
-//         _id: postId,
-//       },
-//       (err, doc) => {
-//         if (err) {
-//           console.log(err);
-//           return res.status(500).json({
-//             message: 'Не удалось удалить статью',
-//           });
-//         }
-
-//         if (!doc) {
-//           return res.status(404).json({
-//             message: 'Статья не найдена',
-//           });
-//         }
-
-//         res.json({
-//           success: true,
-//         });
-//       },
-//     );
-//   } catch (err) {
-//     console.log(err);
-//     res.status(500).json({
-//       message: 'Не удалось получить статьи',
-//     });
-//   }
-// };
-
-
-
-
-// Обновить статью:
-export const update = async (req, res) => {
-  try {
-    const postId = req.params.id;
-
-    await Post.updateOne(
-      {
-        _id: postId,
-      },
-      {
-        title: req.body.title,
-        text: req.body.text,
-        imageUrl: req.body.imageUrl,
-        user: req.userId,
-        tags: req.body.tags.split(','),
-      },
-    );
-
-    res.json({
-      success: true,
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({
-      message: 'Не удалось обновить статью',
-    });
-  }
-};
 
 // Создать пост
 export const createPost = async (req, res) => {
@@ -212,11 +145,51 @@ export const removePost = async (req, res) => {
     await User.findByIdAndUpdate(request.userId, {
        $pull: { posts: postId }
     })
-    
+// ++++++++++++
+    return res.json(post)
+// ===============
   } catch (err) {
     console.log(err);
     res.status(500).json({
       message: 'Не вдалося видалити статттю',
+    });
+  }
+};
+
+// редактирование поста
+export const updatePost = async (req, res) => {
+  try {
+    const { title, text, id } = req.body;
+
+    const post = await Post.findById(id);
+    if (!post) {
+      return res.status(404).json({ message: 'Пост не найден' });
+    }
+
+    // обновляем текст
+    post.title = title;
+    post.text = text;
+
+    // если есть новая картинка
+    if (req.files?.image) {
+      const fileName = Date.now().toString() + req.files.image.name;
+      const __dirname = dirname(fileURLToPath(import.meta.url));
+
+      req.files.image.mv(
+        path.join(__dirname, '..', 'uploads', fileName)
+      );
+
+      post.imageUrl = `/uploads/${fileName}`;
+    }
+
+    await post.save();
+
+    res.json(post);
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: 'Не вдалося оновити статтю',
     });
   }
 };
